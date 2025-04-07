@@ -18,7 +18,7 @@ CUSTOMERS = customers
 N_CLUSTER_ITER = 20
 POPULATION_SIZE = 100
 GENERATIONS = 400
-ELITISM_RATE = 0.25
+ELITISM_RATE = 0.1
 
 # ---------------------------
 # Helper functions
@@ -34,15 +34,74 @@ def compute_distance_matrix(points):
             dmat[i][j] = euclidean_distance(points[i], points[j])
     return dmat
 
+# -------- PAREMETERS -----------
+# The following functions are used to compute the quality metric for the clusters.
 
-def convex_hull_area(points):
+# 1. Paremeter 1
+def convex_average_hull_area(points, cluster):
     """Returns the area of the convex hull of the given points.
     If less than 3 points, area is zero."""
+
     if len(points) < 3:
         return 0
+    
     pts = np.array(points)
     hull = ConvexHull(pts)
+
+    return hull.area / len(cluster)
+
+# 2. Paremeter 2 (not used in the original code)
+def convex_hull_area(points):
+
+    if len(points) < 3:
+        return 0
+    
+    pts = np.array(points)
+    hull = ConvexHull(pts)
+    
     return hull.area
+
+# Parameter 3: (not used in the original code)
+def convex_average_demand_hull_area(points, cluster):
+
+    if len(points) < 3:
+        return 0
+    
+    pts = np.array(points)
+    hull = ConvexHull(pts)
+
+    total_demand = sum([customers[i]['demand'] for i in cluster])
+
+    return hull.area / total_demand
+
+# Parameter 4: (not used in the original code)
+def mean_distance_from_centroid(points):
+    """Returns the mean distance of the vertices in the cluster from the centroid of that cluster."""
+
+    if len(points) < 2:
+        return 0
+    
+    pts = np.array(points)
+    centroid = np.mean(pts, axis=0)
+    distances = [euclidean_distance(pt, centroid) for pt in pts]
+
+    return np.mean(distances)
+
+# Parameter 5: (not used in the original code)
+def mean_distance_from_centroid_avg_demand(points, cluster):
+    """Returns the mean distance of the vertices in the cluster from the centroid of that cluster
+    weighted by the total demand of the cluster."""
+
+    if len(points) < 2:
+        return 0
+    
+    pts = np.array(points)
+    centroid = np.mean(pts, axis=0)
+    distances = [euclidean_distance(pt, centroid) for pt in pts]
+
+    total_demand = sum([customers[i]['demand'] for i in cluster])
+
+    return np.mean(distances) / total_demand
 
 # ---------------------------
 # Phase 1: Clustering
@@ -53,8 +112,6 @@ def cluster_customers(customers, vehicle_capacity=VEHICLE_CAPACITY, n_iter=N_CLU
     Each cluster must not exceed the vehicle capacity.
     Returns the set of clusters (list of lists of customer indices) with the best quality.
     """
-    best_clusters = None
-    best_quality = float('inf')
     
     # For quality metric, we compute for each cluster: convex_hull_area(cluster_points)/number of vertices
     # then sum over clusters.
@@ -101,16 +158,67 @@ def cluster_customers(customers, vehicle_capacity=VEHICLE_CAPACITY, n_iter=N_CLU
                 clusters_load.append(demand)
         
         # Compute quality metric
-        quality = 0
+        quality_scores = {}
+        cluster_quality = {}
 
-        for cluster in clusters:
+        for i, cluster in enumerate(clusters):
+            # Points in the cluster
             pts = [customers[i]['coord'] for i in cluster]
+
+            # Parameter 1
+            avg_area = convex_average_hull_area(pts, cluster)
+            # Parameter 2
             area = convex_hull_area(pts)
-            quality += area / len(cluster)
+            # Parameter 3
+            avg_demand_area = convex_average_demand_hull_area(pts, cluster)
+            # Parameter 4
+            mean_dist = mean_distance_from_centroid(pts)
+            # Parameter 5
+            mean_dist_demand = mean_distance_from_centroid_avg_demand(pts, cluster)
+
+            cluster_quality[i] = {
+                'param1': avg_area,
+                'param2': area,
+                'param3': avg_demand_area,
+                'param4': mean_dist,
+                'param5': mean_dist_demand
+            }
         
-        if quality < best_quality:
-            best_quality = quality
-            best_clusters = clusters
+
+        best_quality = {
+            'param1': float('inf'),
+            'param2': float('inf'),
+            'param3': float('inf'),
+            'param4': float('inf'),
+            'param5': float('inf')
+        }
+
+        best_param_clusters = {
+            'param1': None,
+            'param2': None,
+            'param3': None,
+            'param4': None,
+            'param5': None
+        }
+
+        assigned_clusters = set()
+        all_param_scores = []
+
+        for i, cluster in enumerate(clusters):
+            for param, score in cluster_quality[i].items():
+                all_param_scores.append((param, i, score))
+
+        all_param_scores.sort(key=lambda x: x[2])
+
+        for param, cluster_idx, score in all_param_scores:
+            if cluster_idx not in assigned_clusters and best_param_clusters[param] is None:
+                best_quality[param] = score
+                best_param_clusters[param] = clusters[cluster_idx]
+                assigned_clusters.add(cluster_idx)
+
+        best_clusters = [cluster for cluster in best_param_clusters.values() if cluster is not None]
+        remaining_clusters = [clusters[i] for i in range(len(clusters)) if i not in assigned_clusters]
+        best_clusters.extend(remaining_clusters)
 
     return best_clusters
 
@@ -258,10 +366,10 @@ def solve_cvrp(customers, vehicle_capacity=VEHICLE_CAPACITY, n_cluster_iter=N_CL
     # Phase 1: clustering
     clusters = cluster_customers(customers, vehicle_capacity, n_iter=n_cluster_iter)
     print(f"Found {len(clusters)} clusters (vehicles).\n")
-    
+
     for i, cluster in enumerate(clusters):
         print(f"Cluster {i+1}: {cluster}")
-    print()    
+    print()
     
     # Phase 2: For each cluster, solve TSP using GA
     routes = []
