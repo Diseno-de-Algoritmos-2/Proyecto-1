@@ -2,6 +2,10 @@
 import numpy as np
 from scipy.spatial import ConvexHull
 
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from problemInstance import vehicle_capacity as VEHICLE_CAPACITY, customers as CUSTOMERS
 
 # ---------------------------------------------------------------------------
@@ -20,6 +24,11 @@ def compute_distance_matrix(points):
         for j in range(n):
             dmat[i][j] = euclidean_distance(points[i], points[j])
     return dmat
+
+
+# ---------------------------------------------------------------------------
+# Parameters
+# ---------------------------------------------------------------------------
 
 def convex_average_hull_area(points, cluster):
     """Área del casco convexo dividida por el número de nodos del clúster.
@@ -94,9 +103,9 @@ def phase1_best_clustering(customers, capacity):
 # ---------------------------------------------------------------------------
 # Correr
 # ---------------------------------------------------------------------------
-if __name__ == "__main__":
+def run_phase1():
 
-    print("\nFase 1 - Agrupamiento\n")
+    print("\n --- Fase 1 - Agrupamiento --- \n")
     clusters = phase1_best_clustering(CUSTOMERS, VEHICLE_CAPACITY)
 
     print(f"\nSe formaron {len(clusters)} clústeres:\n")
@@ -106,3 +115,5 @@ if __name__ == "__main__":
         print(f"  Clúster {idx:>2}: {cl}, Capacidad = {load}/{VEHICLE_CAPACITY}")
 
     print(f"\nMétrica de agrupamiento: {round(_clustering_metric(clusters, CUSTOMERS), 2)}\n")
+
+    return clusters

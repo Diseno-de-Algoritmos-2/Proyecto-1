@@ -1,0 +1,15 @@
+# Ignorar todos los directorios de caché de Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Ignorar archivos de caché específicos
+*.pyc
+*.pyo
+
+# Directorios de distribución
+dist/
+build/
+*.egg-info/

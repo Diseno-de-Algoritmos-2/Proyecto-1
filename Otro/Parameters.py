@@ -1,7 +1,5 @@
 import numpy as np
-import matplotlib.pyplot as plt
 from scipy.spatial import ConvexHull
-import random
 
 # ---------------------------
 # IMPORT PROBLEM INSTANCE FROM FILE

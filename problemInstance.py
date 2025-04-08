@@ -1,13 +1,13 @@
 import random
 
 # Set the random seed for reproducibility
-random.seed(32)
+random.seed(20)
 
 # Define the vehicle capacity
-vehicle_capacity = 30
+vehicle_capacity = 50
 
 # Define the customers
-num_customers = 20  # excluding depot
+num_customers = 50  # excluding depot
 depot = {'coord': (50, 50), 'demand': 0}
 customers = [depot]
 

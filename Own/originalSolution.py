@@ -1,22 +1,15 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.spatial import ConvexHull
-import random
 
 # ---------------------------
 # IMPORT PROBLEM INSTANCE FROM FILE
 # ---------------------------
 
-from problemInstance import vehicle_capacity, customers
+import sys
+import os
 
-VEHICLE_CAPACITY = vehicle_capacity
-CUSTOMERS = customers
-
-# ---------------------------
-# Algorithm Parameters
-# ---------------------------
-
-
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from problemInstance import vehicle_capacity as VEHICLE_CAPACITY, customers as CUSTOMERS
 
 # ---------------------------
 # Helper functions

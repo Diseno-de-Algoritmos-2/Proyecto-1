@@ -118,7 +118,6 @@ def cluster_customers(customers, vehicle_capacity=VEHICLE_CAPACITY, n_iter=N_CLU
 # Phase 2: GA for TSP in each cluster
 # ---------------------------
 def route_distance(route, depot, customers):
-
     """Compute total distance for a route: depot -> customers in order -> depot"""
     total = 0
     total += euclidean_distance(depot, customers[route[0]]['coord'])
@@ -131,7 +130,6 @@ def route_distance(route, depot, customers):
 
 # Mutation operators
 def mutation_flip(route):
-
     """Select a random segment and reverse it"""
     new_route = route.copy()
 
@@ -144,7 +142,6 @@ def mutation_flip(route):
     return new_route
 
 def mutation_swap(route):
-
     """Swap two random positions"""
     new_route = route.copy()
 
@@ -157,7 +154,6 @@ def mutation_swap(route):
     return new_route
 
 def mutation_shift(route):
-
     """Remove an element and insert it at a different random position"""
     new_route = route.copy()
 
@@ -172,7 +168,6 @@ def mutation_shift(route):
     return new_route
 
 def generate_initial_population(route, population_size=POPULATION_SIZE):
-
     """Generate an initial population of random permutations of the route."""
     population = []
     for _ in range(population_size):
@@ -183,7 +178,6 @@ def generate_initial_population(route, population_size=POPULATION_SIZE):
     return population
 
 def route_demand(route, customers):
-
     """Calculate the total demand of a route."""
     return sum(customers[i]['demand'] for i in route)
 
