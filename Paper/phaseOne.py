@@ -75,15 +75,14 @@ def _cluster_iteration(seed_node, customers, capacity, dmat):
     until all the customer nodes are clustered and subsequently the next ((n+1)th) iteration commences. 
     """
     while unclustered:
-
+        
         """
         The first cluster of the nth iteration is started with nth customer node by setting the total demand of the current
         cluster (TDCC) to the demand of the nth customer node and nth customer node is marked as a clustered node. 
         """
-        current = seed_node if seed_node in unclustered else next(iter(unclustered))
-        cluster = [current]
-        load = customers[current]["demand"]
-        unclustered.remove(current)
+        v = seed_node if seed_node in unclustered else min(unclustered)
+        cluster = [v]; load = customers[v]["demand"]; unclustered.remove(v)
+
 
         """
         In each iteration, all customers to be
@@ -95,15 +94,24 @@ def _cluster_iteration(seed_node, customers, capacity, dmat):
         node i is added (TDCC = TDCC + di) to TDCC. Accordingly, customer nodes are inserted to the first cluster
         from the top of the list until vehicle capacity constraint reached.
         """
-        dist_list = sorted((dmat[current, j], j) for j in unclustered)
-        for _, j in dist_list:
-            dem = customers[j]["demand"]
-            if load + dem <= capacity:
-                cluster.append(j)
-                load += dem
-                unclustered.remove(j)
+
+        while True:
+
+            # rebuild list each time, as required
+            dist_list = sorted((dmat[v,u], u) for u in unclustered)
+            if not dist_list: break
+            _, i = dist_list[0]
+
+            if load + customers[i]["demand"] <= capacity:     # fits -> put inside
+                cluster.append(i)
+                load += customers[i]["demand"]
+                unclustered.remove(i)
+                v = i                            
+            else:                                # doesn’t fit -> start new cluster
+                break  
 
         clusters.append(cluster)
+
         """
         Afterwards, next customer node (i) from the distance list is selected and the second cluster starts with
         that selected customer node.
