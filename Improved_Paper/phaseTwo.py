@@ -74,6 +74,10 @@ def tournament_selection(population, fitness):
 def ordered_crossover(parent1, parent2):
     """Ordered Crossover (OX) para cromosomas de permutación."""
     n = len(parent1)
+    if n < 2:
+        # No se puede hacer crossover, devolver copia de un padre
+        return parent1.copy()
+
     a, b = sorted(random.sample(range(n), 2))
     child = [None] * n
     # Copiar segmento de P1

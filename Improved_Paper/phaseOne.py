@@ -1,11 +1,5 @@
 import numpy as np
-from scipy.spatial import ConvexHull
-
-import sys
-import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-from problemInstance import vehicle_capacity as VEHICLE_CAPACITY, customers as CUSTOMERS
+from scipy.spatial import ConvexHull, QhullError
 
 # ---------------------------------------------------------------------------
 # Helper functions
@@ -43,25 +37,34 @@ def convex_average_hull_area(points, cluster):
     """Parámetro 1."""
     if len(points) < 3:
         return 0.0
-    hull = ConvexHull(points)
-    return hull.area / len(cluster)
+    try:
+        hull = ConvexHull(points)
+        return hull.area / len(cluster)
+    except QhullError:
+        return 0.0
 
 
 def convex_hull_area(points):
     """Parámetro 2."""
     if len(points) < 3:
         return 0.0
-    hull = ConvexHull(points)
-    return hull.area
+    try:
+        hull = ConvexHull(points)
+        return hull.area
+    except QhullError:
+        return 0.0
 
 
 def convex_average_demand_hull_area(points, cluster, customers):
     """Parámetro 3."""
     if len(points) < 3:
         return 0.0
-    hull = ConvexHull(points)
-    total_demand = sum(customers[i]["demand"] for i in cluster)
-    return hull.area / total_demand
+    try:
+        hull = ConvexHull(points)
+        total_demand = sum(customers[i]["demand"] for i in cluster)
+        return hull.area / total_demand
+    except QhullError:
+        return 0.0
 
 
 def mean_distance_from_centroid(points):
@@ -211,20 +214,21 @@ def phase1_top_sets(customers, capacity):
 # ---------------------------------------------------------------------------
 # Correr
 # ---------------------------------------------------------------------------
-def run_phase1():
+def run_phase1(CUSTOMERS, VEHICLE_CAPACITY, if_print):
 
-    print("\n --- Fase 1 - Agrupamiento --- \n")
+    if if_print: print("\n --- Fase 1 - Agrupamiento --- \n")
     top_sets = phase1_top_sets(CUSTOMERS, VEHICLE_CAPACITY)
 
-    print(f"Se obtuvieron {len(top_sets)} conjuntos ganadores (máx. 5):\n")
+    if if_print:print(f"Se obtuvieron {len(top_sets)} conjuntos ganadores (máx. 5):\n")
     
     for s, clusters in enumerate(top_sets, 1):
         p1, p2, p3, p4, p5 = evaluate_metrics(clusters, CUSTOMERS)
 
-        print(f"  Conjunto {s}: {len(clusters)} clústeres  |  P1={p1:.2f}  P2={p2:.2f}  P3={p3:.2f}  P4={p4:.2f}  P5={p5:.2f}")
-        for i, c in enumerate(clusters, 1):
-            print(f"    Ruta{i}: {c}")
-    
-        print()
+        if if_print: print(f"  Conjunto {s}: {len(clusters)} clústeres  |  P1={p1:.2f}  P2={p2:.2f}  P3={p3:.2f}  P4={p4:.2f}  P5={p5:.2f}")
+        if if_print:
+            for i, c in enumerate(clusters, 1):
+                print(f"    Ruta{i}: {c}")
+        
+            print()
 
     return top_sets

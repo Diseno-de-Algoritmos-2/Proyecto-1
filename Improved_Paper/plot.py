@@ -19,7 +19,7 @@ def plot_routes(customers, routes, save_path="Improved_Paper/cvrp_solution.png")
     for i in range(1, len(customers)):
         pt = customers[i]['coord']
         plt.plot(pt[0], pt[1], 'bo')
-        plt.text(pt[0]+0.2, pt[1]+0.2, str(i), fontsize=9)
+        plt.text(pt[0]+0.0025, pt[1]+0.0025, str(i), fontsize=9)
     
     # Plot routes with different colors.
     for idx, route in enumerate(routes):
