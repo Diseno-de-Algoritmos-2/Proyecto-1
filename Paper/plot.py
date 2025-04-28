@@ -1,5 +1,6 @@
 
 import matplotlib.pyplot as plt
+from matplotlib import colormaps
 
 # ---------------------------
 # Visualization
@@ -8,7 +9,7 @@ import matplotlib.pyplot as plt
 def plot_routes(customers, routes, save_path="Paper/cvrp_solution.png"):
 
     depot = customers[0]['coord']
-    colormap = plt.colormaps.get_cmap('Set1')  # Use a colormap for distinct colors
+    colormap = colormaps['Set1']  # Use a colormap for distinct colors
     colors = [colormap(i / len(routes)) for i in range(len(routes))]  # Generate colors
     
     plt.figure(figsize=(8, 6))

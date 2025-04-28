@@ -1,4 +1,10 @@
 import matplotlib.pyplot as plt
+import json
+import os
+
+
+# Gráficar los datos
+# --------------------------------------------------------------------------------
 
 def visualize_(data_file, name):
     num_clients = [i['num_clients'] for i in data_file.values()]
@@ -24,4 +30,24 @@ def visualize_(data_file, name):
     plt.ylabel('Gap (%)')
 
     plt.tight_layout()
-    plt.savefig(f'Comparación/results/comparison_{name}.png')
+    plt.savefig(f'Comparación/graphs/comparison_{name}.png')
+
+# Leer los datos
+# --------------------------------------------------------------------------------
+
+def run_data (SIMUL, param):
+
+    todos_los_datos = {}
+
+    for i in range(1, SIMUL + 1):
+        with open(f"Comparación/results/{param}_iter_{i}.json", 'r') as f:
+            datos = json.load(f)
+            todos_los_datos[i] = datos
+
+
+    visualize_(todos_los_datos, param)
+
+NUM_SIMUL = 100
+run_data (NUM_SIMUL, "distances")
+run_data (NUM_SIMUL, "times")
+run_data (NUM_SIMUL, "utilization")

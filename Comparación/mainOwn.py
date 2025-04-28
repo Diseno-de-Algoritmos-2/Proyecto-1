@@ -175,6 +175,6 @@ def run_own(CUSTOMERS, VEHICLE_CAPACITY, if_print):
     
     execution_time = end - start
     # Visualize the solution
-    plot_routes(CUSTOMERS, routes)
+    #plot_routes(CUSTOMERS, routes)
 
     return routes, utilization, best_dist, execution_time

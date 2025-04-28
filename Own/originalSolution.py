@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib import colormaps
 
 # ---------------------------
 # IMPORT PROBLEM INSTANCE FROM FILE
@@ -145,22 +146,20 @@ def create_paths(paths, distances, customers):
 # ---------------------------
 # Visualization
 # ---------------------------
-def plot_routes(customers, routes):
+def plot_routes(customers, routes, save_path="Own/cvrp_solution.png"):
+
     depot = customers[0]['coord']
-    colormap = plt.colormaps.get_cmap('Set1')  # Use a colormap for distinct colors
-    colors = [colormap(i / len(routes)) for i in range(len(routes))]  # Generate colors
+    colormap = colormaps['Set1']
+    colors = [colormap(i / len(routes)) for i in range(len(routes))]
     
-    plt.figure(figsize=(8, 6))
-    # Plot depot
+    plt.figure(figsize=(20, 18))
     plt.plot(depot[0], depot[1], 'rs', markersize=12, label="Depot")
     
-    # Plot customers
     for i in range(1, len(customers)):
         pt = customers[i]['coord']
         plt.plot(pt[0], pt[1], 'bo')
         plt.text(pt[0]+0.2, pt[1]+0.2, str(i), fontsize=9)
     
-    # Plot routes with different colors.
     for idx, route in enumerate(routes):
         route_coords = [customers[i]['coord'] for i in route]
         xs, ys = zip(*route_coords)
@@ -171,15 +170,12 @@ def plot_routes(customers, routes):
     plt.ylabel("Y-coordinate")
     plt.legend()
     plt.grid(True)
-    plt.show()
+    plt.savefig(save_path, dpi=300, bbox_inches='tight')
 
 # ---------------------------
-# Example usage
+# Run
 # ---------------------------
 if __name__ == "__main__":
     
-    # Solve the CVRP
     routes = solve_cvrp(CUSTOMERS)
-    
-    # Visualize the solution
     plot_routes(CUSTOMERS, routes)
