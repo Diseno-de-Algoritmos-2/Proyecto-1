@@ -38,21 +38,35 @@ generations. In other words, the chance of a chromosome being selected for repro
 its fitness value. 
 """
 
+
 def build_distance_matrix(coords):
     coords_np = np.array(coords)
     diff = coords_np[:, np.newaxis, :] - coords_np[np.newaxis, :, :]
     return np.linalg.norm(diff, axis=2)
 
+
 def evaluate_population(population, dmat):
-    routes = np.hstack([np.zeros((population.shape[0], 1), dtype=int), population, np.zeros((population.shape[0], 1), dtype=int)])
+    routes = np.hstack(
+        [
+            np.zeros((population.shape[0], 1), dtype=int),
+            population,
+            np.zeros((population.shape[0], 1), dtype=int),
+        ]
+    )
     idx_from = routes[:, :-1]
     idx_to = routes[:, 1:]
     return np.sum(dmat[idx_from, idx_to], axis=1)
 
+
 def tournament_selection(fitness):
-    contenders = np.random.randint(0, len(fitness), size=(POPULATION_SIZE, TOURNAMENT_SIZE))
-    best_idx = contenders[np.arange(POPULATION_SIZE), np.argmin(fitness[contenders], axis=1)]
+    contenders = np.random.randint(
+        0, len(fitness), size=(POPULATION_SIZE, TOURNAMENT_SIZE)
+    )
+    best_idx = contenders[
+        np.arange(POPULATION_SIZE), np.argmin(fitness[contenders], axis=1)
+    ]
     return best_idx
+
 
 # ---------------------------------------------------------------------------
 # Operadores genéticos
@@ -70,19 +84,20 @@ NOTA: Por sugerencia de AI se usa numba para hacer más
 eficiente y sin ciclos los operadores.
 """
 
+
 @numba.njit
 def ordered_crossover_batch(parents1, parents2):
     n, m = parents1.shape
     offspring = np.full((n, m), -1, dtype=np.int32)
 
     cut_points = np.random.randint(0, m, size=(n, 2))
-    
+
     for i in range(n):
         a, b = cut_points[i][0], cut_points[i][1]
         if a > b:
             a, b = b, a
 
-        offspring[i, a:b+1] = parents1[i, a:b+1]
+        offspring[i, a : b + 1] = parents1[i, a : b + 1]
 
     for i in range(n):
         p2 = parents2[i]
@@ -102,11 +117,13 @@ def ordered_crossover_batch(parents1, parents2):
 
     return offspring
 
+
 """
 The Swap
 mutation operator is applied under the mutation probability
 0.9.
 """
+
 
 @numba.njit
 def mutation_swap_batch(population):
@@ -134,22 +151,25 @@ def mutation_swap_batch(population):
 # GA principal por clúster
 # ---------------------------------------------------------------------------
 
-def genetic_algorithm_tsp(cluster, depot_coord, customers):
 
+def genetic_algorithm_tsp(cluster, depot_coord, customers):
     """
     In this study, total TSP tour distance of chromosome was used as the fitness value. The
-    chromosomes with less TSP tour distance get higher chance to be selected to reproduce the next generation. 
+    chromosomes with less TSP tour distance get higher chance to be selected to reproduce the next generation.
     """
-    
+
     # ---------------- Preparar datos locales ----------------
-    coords = [depot_coord] + [customers[i]['coord'] for i in cluster]
+    coords = [depot_coord] + [customers[i]["coord"] for i in cluster]
     dmat = build_distance_matrix(coords)
 
     local_nodes = np.arange(1, len(coords))
     local2global = {loc: glob for loc, glob in zip(local_nodes, cluster)}
 
     # ---------------- Inicialización ----------------
-    population = np.array([np.random.permutation(local_nodes) for _ in range(POPULATION_SIZE)], dtype=np.int32)
+    population = np.array(
+        [np.random.permutation(local_nodes) for _ in range(POPULATION_SIZE)],
+        dtype=np.int32,
+    )
     best_dist = np.inf
     best_route = None
     gens_without_improve = 0

@@ -13,13 +13,16 @@ from plot import plot_routes
 # Función auxiliar necesaria
 # ---------------------------------------------------------------------------
 
+
 def route_demand(route, customers):
     """Calcula la demanda total de una ruta."""
     return sum(customers[i]["demand"] for i in route if i < len(customers))
 
+
 # ---------------------------
 # Main CVRP solution
 # ---------------------------
+
 
 def solve_cvrp(customers, vehicle_capacity=VEHICLE_CAPACITY):
     """
@@ -31,13 +34,13 @@ def solve_cvrp(customers, vehicle_capacity=VEHICLE_CAPACITY):
 
     # Phase 1: clustering
     top_sets = run_phase1(customers, VEHICLE_CAPACITY, True)
-    
+
     # Phase 2: For each cluster, solve TSP using GA
 
     print(" --- Fase 2 - Algoritmo Genético ---\n")
 
     best_cluster = []
-    best_dist = float('inf')
+    best_dist = float("inf")
 
     for clusters in top_sets:
         routes = []
@@ -57,10 +60,13 @@ def solve_cvrp(customers, vehicle_capacity=VEHICLE_CAPACITY):
 
     for i, route in enumerate(best_cluster):
         route_demand_total = route_demand(route, customers)
-        print(f"    Vehicle {i+1}: {route}, Distance: {best_dist:.2f}, Demand: {route_demand_total}/{vehicle_capacity}")
+        print(
+            f"    Vehicle {i+1}: {route}, Distance: {best_dist:.2f}, Demand: {route_demand_total}/{vehicle_capacity}"
+        )
 
     print(f"\n  Total distance: {best_dist:.2f}\n")
     return best_cluster
+
 
 # ---------------------------
 # Example usage

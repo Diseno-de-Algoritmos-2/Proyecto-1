@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.spatial.qhull import QhullError
 from scipy import spatial
+
 spatial.QhullError = QhullError
 from scipy.spatial import ConvexHull
 import gc
@@ -16,13 +17,16 @@ formed which contained the distances among all the vertices
 including the depot.
 """
 
+
 def euclidean_distance(a, b):
     return np.linalg.norm(a - b)
+
 
 def compute_distance_matrix(points):
     points = np.array(points)
     diff = points[:, np.newaxis, :] - points[np.newaxis, :, :]
     return np.linalg.norm(diff, axis=-1)
+
 
 # ------------------------  Parámetros (métricas)  --------------------------
 
@@ -33,6 +37,7 @@ of feasible clusters. The new four parameters are stated
 from (9) to (12) as follows
 """
 
+
 def convex_average_hull_area(points, cluster):
     if len(points) < 3:
         return 100000000.0
@@ -42,6 +47,7 @@ def convex_average_hull_area(points, cluster):
     except QhullError:
         return 100000000.0
 
+
 def convex_hull_area(points):
     if len(points) < 3:
         return 100000000.0
@@ -50,6 +56,7 @@ def convex_hull_area(points):
         return hull.area
     except QhullError:
         return 100000000.0
+
 
 def convex_average_demand_hull_area(points, cluster, customers):
     if len(points) < 3:
@@ -61,11 +68,13 @@ def convex_average_demand_hull_area(points, cluster, customers):
     except QhullError:
         return 100000000.0
 
+
 def mean_distance_from_centroid(points):
     if len(points) < 2:
         return 100000000.0
     centroid = np.mean(points, axis=0)
     return np.mean(np.linalg.norm(points - centroid, axis=1))
+
 
 def mean_distance_from_centroid_avg_demand(points, cluster, customers):
     if len(points) < 2:
@@ -75,9 +84,11 @@ def mean_distance_from_centroid_avg_demand(points, cluster, customers):
     total_demand = np.sum([customers[i]["demand"] for i in cluster])
     return mean_dist / total_demand
 
+
 # ---------------------------------------------------------------------------
 # Agrupamiento
 # ---------------------------------------------------------------------------
+
 
 def _cluster_iteration(seed_node, customers, capacity, dmat):
 
@@ -98,7 +109,7 @@ def _cluster_iteration(seed_node, customers, capacity, dmat):
 
         """
         The first cluster of the nth iteration is started with nth customer node by setting the total demand of the current
-        cluster (TDCC) to the demand of the nth customer node and nth customer node is marked as a clustered node. 
+        cluster (TDCC) to the demand of the nth customer node and nth customer node is marked as a clustered node.
         """
 
         v = seed_node if seed_node in unclustered else min(unclustered)
@@ -123,7 +134,9 @@ def _cluster_iteration(seed_node, customers, capacity, dmat):
             distances = sorted([(dmat[v, u], u) for u in unclustered])
             if not distances:
                 break
-            _, i = distances[0]  # Deberiamos usar min y no ordenar, pero seguimos el paper.
+            _, i = distances[
+                0
+            ]  # Deberiamos usar min y no ordenar, pero seguimos el paper.
             if load + customers[i]["demand"] <= capacity:
                 cluster.append(i)
                 load += customers[i]["demand"]
@@ -141,6 +154,7 @@ def _cluster_iteration(seed_node, customers, capacity, dmat):
 
     return clusters
 
+
 # ---------------------------------------------------------------------------
 # Evaluación de métricas
 # ---------------------------------------------------------------------------
@@ -157,6 +171,7 @@ TODA METRICA QUE NO SEA 0.0 O NO SE CALCULE POR IMPEDIMENTO
 GEOMETRICO SE PENALIZA.
 """
 
+
 def evaluate_metrics(clusters, customers):
     coords = np.array([c["coord"] for c in customers])
 
@@ -170,13 +185,19 @@ def evaluate_metrics(clusters, customers):
         p4 += mean_distance_from_centroid(pts)
         p5 += mean_distance_from_centroid_avg_demand(pts, cl, customers)
 
-        if p1 == 0.0: p1 = 100000000.0
-        if p2 == 0.0: p2 = 100000000.0
-        if p3 == 0.0: p3 = 100000000.0
-        if p4 == 0.0: p4 = 100000000.0
-        if p5 == 0.0: p5 = 100000000.0
+        if p1 == 0.0:
+            p1 = 100000000.0
+        if p2 == 0.0:
+            p2 = 100000000.0
+        if p3 == 0.0:
+            p3 = 100000000.0
+        if p4 == 0.0:
+            p4 = 100000000.0
+        if p5 == 0.0:
+            p5 = 100000000.0
 
     return p1, p2, p3, p4, p5
+
 
 # ---------------------------------------------------------------------------
 # Fase 1 principal
@@ -188,6 +209,7 @@ method is used to construct n number of sets of feasible
 clusters at the beginning of the first phase in the improved
 algorithm
 """
+
 
 def phase1_top_sets(customers, capacity):
     coords = np.array([c["coord"] for c in customers])
@@ -216,7 +238,9 @@ def phase1_top_sets(customers, capacity):
     """
 
     for k in range(5):
-        idx_min = min(range(len(all_clusterings)), key=lambda i: all_clusterings[i][1][k])
+        idx_min = min(
+            range(len(all_clusterings)), key=lambda i: all_clusterings[i][1][k]
+        )
         winners[idx_min] = all_clusterings[idx_min][0]
 
     del dmat, all_clusterings
@@ -229,6 +253,7 @@ def phase1_top_sets(customers, capacity):
 # Correr
 # ---------------------------------------------------------------------------
 
+
 def run_phase1(CUSTOMERS, VEHICLE_CAPACITY, if_print):
     if if_print:
         print("\n --- Fase 1 - Agrupamiento --- \n")
@@ -237,12 +262,14 @@ def run_phase1(CUSTOMERS, VEHICLE_CAPACITY, if_print):
 
     if if_print:
         print(f"Se obtuvieron {len(top_sets)} conjuntos ganadores (máx. 5):\n")
-    
+
         for s, clusters in enumerate(top_sets, 1):
             p1, p2, p3, p4, p5 = evaluate_metrics(clusters, CUSTOMERS)
-    
-            print(f"  Conjunto {s}: {len(clusters)} clústeres  |  P1={p1:.5f}  P2={p2:.5f}  P3={p3:.5f}  P4={p4:.5f}  P5={p5:.5f}")
-        
+
+            print(
+                f"  Conjunto {s}: {len(clusters)} clústeres  |  P1={p1:.5f}  P2={p2:.5f}  P3={p3:.5f}  P4={p4:.5f}  P5={p5:.5f}"
+            )
+
             for i, c in enumerate(clusters, 1):
                 print(f"    Ruta{i}: {c}")
             print()

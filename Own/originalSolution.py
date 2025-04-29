@@ -16,131 +16,142 @@ from problemInstance import vehicle_capacity as VEHICLE_CAPACITY, customers as C
 # Helper functions
 # ---------------------------
 
+
 def euclidean_distance(a, b):
     return np.linalg.norm(np.array(a) - np.array(b))
+
 
 # ---------------------------
 # Phase 1: Organize Paths
 # ---------------------------
+def evaluate_truck_configurations(customers, num_vehicles, distances):
+    """
+    Evaluate all possible numbers of trucks between num_vehicles and the number of customers.
+    Stop evaluating further configurations as soon as a longer solution is found.
+    Return the solution with the minimum total distance.
+    """
+    best_paths = None
+    min_total_distance = float("inf")
 
-def solve_cvrp(customers):
-    
-    # Calculate the number of vehicles needed, this is the total demand divided by the vehicle capacity
-    total_demand = 0
-    for customer in customers[1:]:
-        total_demand += customer['demand']
-        
-    num_vehicles = int(total_demand / VEHICLE_CAPACITY)
-    
-    # Create the list of k paths
-    paths = [[0] for _ in range(num_vehicles)]
-    
-    # Calculate the distance from the depot to each customer and sort them
-    depot = customers[0]['coord']
-    distances = []
-    
-    for i in range(1, len(customers)):
-        dist = euclidean_distance(depot, customers[i]['coord'])
-        distances.append((i, dist))
-        
-    # Sort the customers by distance from the depot
-    distances.sort(key=lambda x: x[1])
-    
-    # Recursively add the next closest customer to a path
-    # so that the total distance of all paths is minimized
-    create_paths(paths, distances, customers)
-    
-    return paths
+    # Iterate over all possible numbers of trucks
+    for k in range(num_vehicles, len(customers)):
+        print(f"Evaluating configuration with {k} vehicles...")
+        paths = [[0] for _ in range(k)]  # Initialize k paths (one for each vehicle)
+
+        try:
+            # Attempt to create paths for the current number of vehicles
+            current_paths = create_paths(paths, distances, customers)
+
+            # Calculate the total distance for the current configuration
+            total_distance = calculate_total_distance(current_paths, customers)
+
+            # If the current solution is worse than the best one, stop searching
+            if total_distance >= min_total_distance:
+                print(f"Stopping search: Found longer solution with {k} vehicles.")
+                break
+
+            # Update the best solution if the current configuration has a smaller total distance
+            min_total_distance = total_distance
+            best_paths = current_paths
+
+        except ValueError:
+            # If no valid route is possible with the current number of vehicles, assign infinite distance
+            print(f"No valid solution with {k} vehicles. Assigning infinite distance.")
+            continue
+
+    # If no valid solution was found, raise an error
+    if best_paths is None:
+        raise ValueError("No valid solution found for any number of vehicles.")
+
+    print(f"\nBest solution found with total distance: {min_total_distance:.2f}")
+    return best_paths
+
+
+def calculate_total_distance(paths, customers):
+    """
+    Calculate the total distance for a given set of paths.
+    """
+    total_distance = 0
+    for path in paths:
+        total_distance += sum(
+            euclidean_distance(
+                customers[path[j]]["coord"], customers[path[j + 1]]["coord"]
+            )
+            for j in range(len(path) - 1)
+        )
+    return total_distance
+
 
 def create_paths(paths, distances, customers):
-    
-    # Iterate through the sorted distances
-    # and iteratively add the closes so that the total
-    # distance of all paths is minimized
-    # while respecting the vehicle capacity
-
-    # this should have a complexity of k * n, where
-    # k is the number of vehicles and n is the number of customers
-    
-    distance_per_path = [[0] for _ in range(len(paths))]
+    """
+    Create paths for the given number of vehicles while respecting vehicle capacity.
+    """
     demand_per_path = [0 for _ in range(len(paths))]
 
-    
     for customer_index, dist in distances:
-        
         best_path_index = -1
-        best_path_distance = float('inf')
-        
-        for path in paths:
-            
-            # Check if the customer can be added to the path
-            # without exceeding the vehicle capacity
-            path_demand = sum([customers[i]['demand'] for i in path])
-            customer_demand = customers[customer_index]['demand']
+        best_path_distance = float("inf")
+
+        for path_index, path in enumerate(paths):
+            # Check if the customer can be added to the path without exceeding the vehicle capacity
+            path_demand = demand_per_path[path_index]
+            customer_demand = customers[customer_index]["demand"]
             if path_demand + customer_demand <= VEHICLE_CAPACITY:
-                
-                # Calculate the total distance. this is the sum of the
-                # distance in all paths, plus the distance from the last element of the
-                # current path to the customer, plus the distance from the customer to the depot
-                
-                path_distance = 0
-                
-                for p in paths:
-                    path_distance += sum(p)
-                
-                path_distance += euclidean_distance(customers[path[-1]]['coord'], customers[customer_index]['coord'])
-                path_distance += euclidean_distance(customers[customer_index]['coord'], customers[0]['coord'])
-                
+                # Calculate the total distance if the customer is added to this path
+                path_distance = sum(
+                    euclidean_distance(
+                        customers[path[j]]["coord"], customers[path[j + 1]]["coord"]
+                    )
+                    for j in range(len(path) - 1)
+                )
+                path_distance += euclidean_distance(
+                    customers[path[-1]]["coord"], customers[customer_index]["coord"]
+                )
+                path_distance += euclidean_distance(
+                    customers[customer_index]["coord"], customers[0]["coord"]
+                )
+
                 # Check if this path is better than the best path found so far
                 if path_distance < best_path_distance:
                     best_path_distance = path_distance
-                    best_path_index = paths.index(path)
-                    
-        # If a path was found, add the customer to the path
-        if best_path_index != -1:     
-            
-            # Add the customer to the path
-            paths[best_path_index].append(customer_index)
-            
-            # Update the distance and demand for the path
-            demand_per_path[best_path_index] += customers[customer_index]['demand']
-            distance_per_path[best_path_index] += euclidean_distance(customers[paths[best_path_index][-1]]['coord'], customers[customer_index]['coord'])
+                    best_path_index = path_index
 
-        else:   
-            # If no path was found, create a new path
-            new_path = [0, customer_index]
-            paths.append(new_path)
-            
-            # Update the distance and demand for the new path
-            distance_per_path.append(euclidean_distance(customers[0]['coord'], customers[customer_index]['coord']))
-            demand_per_path.append(customers[customer_index]['demand'])
-            
-            print(f"Created new path for customer {customer_index}")
-            
-            
-    # add 0 at the end of each path to return to the depot
+        # If a valid path is found, add the customer to the best path
+        if best_path_index != -1:
+            paths[best_path_index].append(customer_index)
+            demand_per_path[best_path_index] += customers[customer_index]["demand"]
+        else:
+            # If no valid path is found, raise an exception
+            raise ValueError(f"Cannot assign customer {customer_index} to any path.")
+
+    # Add the depot (0) at the end of each path to return to the depot
     for path in paths:
         path.append(0)
-        
-        
-    total_distance = 0
-    
-    for i, path in enumerate(paths):
-        route = path
-        route_demand_total = sum([customers[i]['demand'] for i in path])
-        route_dist = sum([euclidean_distance(customers[path[j]]['coord'], customers[path[j+1]]['coord']) for j in range(len(path)-1)])
-        print(f"Vehicle {i+1}: Route: {route}, Distance: {route_dist:.2f}, Demand: {route_demand_total}")
-        
-        # print the total distance of all paths
-        total_distance += route_dist
-    
-    print(f"\nTotal distance: {total_distance:.2f}")
-        
-        
-        
-    # return the paths
-    return paths       
 
+    return paths
+
+
+def solve_cvrp(customers):
+    """
+    Solve the CVRP problem by evaluating all possible numbers of trucks.
+    """
+    # Calculate the total demand of all customers
+    total_demand = sum(customer["demand"] for customer in customers[1:])
+
+    # Calculate the minimum number of vehicles required based on vehicle capacity
+    num_vehicles = int(np.ceil(total_demand / VEHICLE_CAPACITY))
+
+    # Calculate the distance from the depot to each customer and sort them
+    depot = customers[0]["coord"]
+    distances = [
+        (i, euclidean_distance(depot, customers[i]["coord"]))
+        for i in range(1, len(customers))
+    ]
+    distances.sort(key=lambda x: x[1])  # Sort customers by distance from the depot
+
+    # Evaluate all truck configurations and return the best solution
+    best_paths = evaluate_truck_configurations(customers, num_vehicles, distances)
+    return best_paths
 
 
 # ---------------------------
@@ -148,34 +159,35 @@ def create_paths(paths, distances, customers):
 # ---------------------------
 def plot_routes(customers, routes, save_path="Own/cvrp_solution.png"):
 
-    depot = customers[0]['coord']
-    colormap = colormaps['Set1']
+    depot = customers[0]["coord"]
+    colormap = colormaps["Set1"]
     colors = [colormap(i / len(routes)) for i in range(len(routes))]
-    
+
     plt.figure(figsize=(20, 18))
-    plt.plot(depot[0], depot[1], 'rs', markersize=12, label="Depot")
-    
+    plt.plot(depot[0], depot[1], "rs", markersize=12, label="Depot")
+
     for i in range(1, len(customers)):
-        pt = customers[i]['coord']
-        plt.plot(pt[0], pt[1], 'bo')
-        plt.text(pt[0]+0.2, pt[1]+0.2, str(i), fontsize=9)
-    
+        pt = customers[i]["coord"]
+        plt.plot(pt[0], pt[1], "bo")
+        plt.text(pt[0] + 0.2, pt[1] + 0.2, str(i), fontsize=9)
+
     for idx, route in enumerate(routes):
-        route_coords = [customers[i]['coord'] for i in route]
+        route_coords = [customers[i]["coord"] for i in route]
         xs, ys = zip(*route_coords)
-        plt.plot(xs, ys, '-', color=colors[idx], linewidth=2, label=f"Vehicle {idx+1}")
-    
+        plt.plot(xs, ys, "-", color=colors[idx], linewidth=2, label=f"Vehicle {idx+1}")
+
     plt.title("CVRP Solution Routes")
     plt.xlabel("X-coordinate")
     plt.ylabel("Y-coordinate")
     plt.legend()
     plt.grid(True)
-    plt.savefig(save_path, dpi=300, bbox_inches='tight')
+    plt.savefig(save_path, dpi=300, bbox_inches="tight")
+
 
 # ---------------------------
 # Run
 # ---------------------------
 if __name__ == "__main__":
-    
+
     routes = solve_cvrp(CUSTOMERS)
     plot_routes(CUSTOMERS, routes)

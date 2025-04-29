@@ -20,14 +20,18 @@ GENERATIONS = 400
 # Funciones de Ayuda
 # ---------------------------
 
+
 def route_demand(route, customers):
-    return sum(customers[i]['demand'] for i in route)
+    return sum(customers[i]["demand"] for i in route)
+
 
 # ---------------------------
 # Operadores de mutación
 # ---------------------------
 
 """Flip: organize the values in between two selected positions in reverse order"""
+
+
 def mutation_flip(route):
     if len(route) < 2:
         return route.copy()
@@ -53,9 +57,11 @@ def mutation_shift(route):
     j = random.randrange(len(remainder) + 1)
     return remainder[:j] + [gene] + remainder[j:]
 
+
 # ---------------------------
 # GA optimizado
 # ---------------------------
+
 
 def _build_distance_matrix(coords):
     """
@@ -63,16 +69,16 @@ def _build_distance_matrix(coords):
     fitness value of each chromosome in the population. The quality of each chromosome is reflected by the fitness
     value. The fitness value is used by the genetic algorithm to select chromosomes for the reproduction of the new
     generations. In other words, the chance of a chromosome being selected for reproduction is directly depends on
-    its fitness value. 
+    its fitness value.
     """
     diff = np.expand_dims(coords, 1) - np.expand_dims(coords, 0)
-    return np.sqrt((diff ** 2).sum(axis=2))
+    return np.sqrt((diff**2).sum(axis=2))
 
 
 def _route_distance_np(route_local, dmat):
     """
     In this study, total TSP tour distance of chromosome was used as the fitness value. The
-    chromosomes with less TSP tour distance get higher chance to be selected to reproduce the next generation. 
+    chromosomes with less TSP tour distance get higher chance to be selected to reproduce the next generation.
     """
     if not route_local:
         return 0.0
@@ -83,10 +89,10 @@ def _route_distance_np(route_local, dmat):
 
 def _generate_initial_population(nodes_local):
     """
-    The permutation encoding is best suited to represent the 
+    The permutation encoding is best suited to represent the
     solutions of TSP. This encoding is generally used in ordering issues in which genetic operators are required to
     keep all the values in chromosome exactly once. In the genetic algorithm implementation of the novel heuristic,
-    the permutation encoding was used. 
+    the permutation encoding was used.
     """
     pop = []
     for _ in range(POPULATION_SIZE):
@@ -96,7 +102,12 @@ def _generate_initial_population(nodes_local):
     return pop
 
 
-def genetic_algorithm_tsp(cluster, depot_coord, customers, vehicle_capacity,):
+def genetic_algorithm_tsp(
+    cluster,
+    depot_coord,
+    customers,
+    vehicle_capacity,
+):
 
     # ---------------- Preparar datos locales ----------------
     coords_local = [depot_coord] + [customers[i]["coord"] for i in cluster]
@@ -140,9 +151,9 @@ def genetic_algorithm_tsp(cluster, depot_coord, customers, vehicle_capacity,):
         """
         new_population = []
         for i in range(0, POPULATION_SIZE, 4):
-            
-            group = shuffled_population[i : i+4]
-            group_fit = shuffled_fitness[i : i+4]
+
+            group = shuffled_population[i : i + 4]
+            group_fit = shuffled_fitness[i : i + 4]
 
             """
             4. Find the best chromosome from these four chromosomes according to the fitness value 
@@ -172,5 +183,9 @@ def genetic_algorithm_tsp(cluster, depot_coord, customers, vehicle_capacity,):
 
         population = new_population
 
-    best_route_global = [local_final_global[idx] for idx in best_route_local] if best_route_local else []
+    best_route_global = (
+        [local_final_global[idx] for idx in best_route_local]
+        if best_route_local
+        else []
+    )
     return best_route_global, best_distance
