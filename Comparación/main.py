@@ -11,59 +11,72 @@ from problemInstanceReal import (
 from mainPaper import run_paper
 from mainOwn import run_own
 
-DISTANCES_ = {}
-TIMES_ = {}
-UTILIZATION_ = {}
-
-SIM = 100
+SIM = 100  # Number of simulations
 IF_PRINT = False
 
-size = random.randint(5, LEN_CLIENTES)
-print("\n-------------------------------------------------------")
-print(f"Simulación {SIM} con {size} clientes.")
-print("-------------------------------------------------------\n")
+for sim in range(1, SIM + 1):
 
-CUSTOMERS = get_clientes(size)
+    # Escojer un número aleatorio de clientes, mínimo 5 y máximo todos los 250
+    size = random.randint(5, LEN_CLIENTES)
 
-# Correr el algoritmo del Paper
-routes_paper, utilization_paper, best_dist_paper, exceution_time_paper = run_paper(
-    CUSTOMERS, VEHICLE_CAPACITY, IF_PRINT
-)
-routes_own, utilization_own, best_dist_own, exceution_time_own = run_own(
-    CUSTOMERS, VEHICLE_CAPACITY, IF_PRINT
-)
-# Guardar resultados
-print(f"Distance Paper: {best_dist_paper} in {exceution_time_paper} seg\n")
-print(f"Distance Own: {best_dist_own} in {exceution_time_own} seg \n")
+    print("\n-------------------------------------------------------")
+    print(f"Simulación {sim} con {size} clientes.")
+    print("-------------------------------------------------------\n")
 
-# 1. Distancias
-DISTANCES_ = {
-    "num_clients": size,
-    "paper": best_dist_paper,
-    "own": best_dist_own,
-    "gap": (best_dist_own / best_dist_paper - 1) * 100,
-}
+    CUSTOMERS = get_clientes(size)
 
-# 2. Tiempos
-TIMES_ = {
-    "num_clients": size,
-    "paper": exceution_time_paper,
-    "own": exceution_time_own,
-    "gap": (exceution_time_own / exceution_time_paper - 1) * 100,
-}
+    # Correr el algoritmo del Paper
+    routes_paper, utilization_paper, best_dist_paper, exceution_time_paper = run_paper(
+        CUSTOMERS, VEHICLE_CAPACITY, IF_PRINT
+    )
 
-# 3. Utilización
-utilization_paper = sum(utilization_paper) / len(utilization_paper)
-utilization_own = sum(utilization_own) / len(utilization_own)
+    # Correr el algoritmo propio
+    routes_own, utilization_own, best_dist_own, exceution_time_own = run_own(
+        CUSTOMERS, VEHICLE_CAPACITY, IF_PRINT
+    )
 
-UTILIZATION_ = {
-    "num_clients": size,
-    "paper": utilization_paper,
-    "own": utilization_own,
-    "gap": (utilization_own / utilization_paper - 1) * 100,
-}
+    print(routes_paper)
 
+    # Guardar resultados
+    print(f"Distance Paper: {best_dist_paper} in {exceution_time_paper} seg\n")
+    print(f"Distance Own: {best_dist_own} in {exceution_time_own} seg \n")
 
-save_simulation_to_json(DISTANCES_, f"distances_iter_{SIM}")
-save_simulation_to_json(TIMES_, f"times_iter_{SIM}")
-save_simulation_to_json(UTILIZATION_, f"utilization_iter_{SIM}")
+    # 1. Distancias
+    DISTANCES_ = {
+        "num_clients": size,
+        "paper": best_dist_paper,
+        "own": best_dist_own,
+        "gap": (best_dist_own / best_dist_paper - 1) * 100,
+    }
+
+    # 2. Tiempos
+    TIMES_ = {
+        "num_clients": size,
+        "paper": exceution_time_paper,
+        "own": exceution_time_own,
+        "gap": (exceution_time_own / exceution_time_paper - 1) * 100,
+    }
+
+    # 3. Utilización
+    utilization_paper = sum(utilization_paper) / len(utilization_paper)
+    utilization_own = sum(utilization_own) / len(utilization_own)
+
+    UTILIZATION_ = {
+        "num_clients": size,
+        "paper": utilization_paper,
+        "own": utilization_own,
+        "gap": (utilization_own / utilization_paper - 1) * 100,
+    }
+
+    # 4. Número de camiones
+    TRUCKS_ = {
+        "num_clients": size,
+        "paper": len(routes_paper),
+        "own": len(routes_own),
+        "gap": (len(routes_own) / len(routes_paper) - 1) * 100,
+    }
+
+    save_simulation_to_json(DISTANCES_, f"distances_iter_{sim}")
+    save_simulation_to_json(TIMES_, f"times_iter_{sim}")
+    save_simulation_to_json(UTILIZATION_, f"utilization_iter_{sim}")
+    save_simulation_to_json(TRUCKS_, f"trucks_iter_{sim}")
