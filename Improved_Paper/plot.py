@@ -1,4 +1,3 @@
-
 import matplotlib.pyplot as plt
 from matplotlib import colormaps
 
@@ -6,28 +5,29 @@ from matplotlib import colormaps
 # Visualization
 # ---------------------------
 
+
 def plot_routes(customers, routes, save_path="Improved_Paper/cvrp_solution.png"):
 
-    depot = customers[0]['coord']
-    colormap = colormaps['Set1']  # Use a colormap for distinct colors
+    depot = customers[0]["coord"]
+    colormap = colormaps["Set1"]  # Use a colormap for distinct colors
     colors = [colormap(i / len(routes)) for i in range(len(routes))]  # Generate colors
-    
+
     plt.figure(figsize=(20, 18))
     # Plot depot
-    plt.plot(depot[0], depot[1], 'rs', markersize=12, label="Depot")
-    
+    plt.plot(depot[0], depot[1], "rs", markersize=12, label="Depot")
+
     # Plot customers
     for i in range(1, len(customers)):
-        pt = customers[i]['coord']
-        plt.plot(pt[0], pt[1], 'bo')
-        plt.text(pt[0]+0.0025, pt[1]+0.0025, str(i), fontsize=9)
-    
+        pt = customers[i]["coord"]
+        plt.plot(pt[0], pt[1], "bo")
+        plt.text(pt[0] + 0.0025, pt[1] + 0.0025, str(i), fontsize=9)
+
     # Plot routes with different colors.
     for idx, route in enumerate(routes):
-        route_coords = [customers[i]['coord'] for i in route]
+        route_coords = [customers[i]["coord"] for i in route]
         xs, ys = zip(*route_coords)
-        plt.plot(xs, ys, '-', color=colors[idx], linewidth=2, label=f"Vehicle {idx+1}")
-    
+        plt.plot(xs, ys, "-", color=colors[idx], linewidth=2, label=f"Vehicle {idx+1}")
+
     plt.title("CVRP Solution Routes")
     plt.xlabel("X-coordinate")
     plt.ylabel("Y-coordinate")
@@ -35,6 +35,6 @@ def plot_routes(customers, routes, save_path="Improved_Paper/cvrp_solution.png")
     plt.grid(True)
 
     # Save the figure before showing it
-    plt.savefig(save_path, dpi=300, bbox_inches='tight')
+    plt.savefig(save_path, dpi=300, bbox_inches="tight")
 
-    #plt.show()
+    # plt.show()

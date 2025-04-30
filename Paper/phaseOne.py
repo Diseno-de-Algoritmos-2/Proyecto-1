@@ -17,8 +17,10 @@ In the beginning of the first phase, a cost/distance matrix is
 calculated which contains the distance among all the customer nodes and the depot. 
 """
 
+
 def euclidean_distance(a, b):
     return np.linalg.norm(np.array(a) - np.array(b))
+
 
 def compute_distance_matrix(points):
     n = len(points)
@@ -42,12 +44,14 @@ value is evaluated for all the clusters of one particular iterative set of clust
 summation is used as the parameter to select the best set of clusters. 
 """
 
+
 def convex_average_hull_area(points, cluster):
     if len(points) < 3:
         return 0.0
     pts = np.array(points)
     hull = ConvexHull(pts)
     return hull.area / len(cluster)
+
 
 def _clustering_metric(clusters, customers):
     """Σ(area casco convexo / |cluster|)"""
@@ -57,9 +61,11 @@ def _clustering_metric(clusters, customers):
         total += convex_average_hull_area(pts, cluster)
     return total
 
+
 # ---------------------------------------------------------------------------
 # Fase 1 – agrupamiento
 # ---------------------------------------------------------------------------
+
 
 def _cluster_iteration(seed_node, customers, capacity, dmat):
 
@@ -75,14 +81,15 @@ def _cluster_iteration(seed_node, customers, capacity, dmat):
     until all the customer nodes are clustered and subsequently the next ((n+1)th) iteration commences. 
     """
     while unclustered:
-        
+
         """
         The first cluster of the nth iteration is started with nth customer node by setting the total demand of the current
-        cluster (TDCC) to the demand of the nth customer node and nth customer node is marked as a clustered node. 
+        cluster (TDCC) to the demand of the nth customer node and nth customer node is marked as a clustered node.
         """
         v = seed_node if seed_node in unclustered else min(unclustered)
-        cluster = [v]; load = customers[v]["demand"]; unclustered.remove(v)
-
+        cluster = [v]
+        load = customers[v]["demand"]
+        unclustered.remove(v)
 
         """
         In each iteration, all customers to be
@@ -98,17 +105,18 @@ def _cluster_iteration(seed_node, customers, capacity, dmat):
         while True:
 
             # rebuild list each time, as required
-            dist_list = sorted((dmat[v,u], u) for u in unclustered)
-            if not dist_list: break
+            dist_list = sorted((dmat[v, u], u) for u in unclustered)
+            if not dist_list:
+                break
             _, i = dist_list[0]
 
-            if load + customers[i]["demand"] <= capacity:     # fits -> put inside
+            if load + customers[i]["demand"] <= capacity:  # fits -> put inside
                 cluster.append(i)
                 load += customers[i]["demand"]
                 unclustered.remove(i)
-                v = i                            
-            else:                                # doesn’t fit -> start new cluster
-                break  
+                v = i
+            else:  # doesn’t fit -> start new cluster
+                break
 
         clusters.append(cluster)
 
@@ -146,7 +154,9 @@ def phase1_best_clustering(customers, capacity):
         if metric < best_metric:
             best_metric = metric
             best_clusters = clusters
-            print(f"  --> Mejor agrupamiento: {seed_node} (métrica = {round(best_metric, 2)})")
+            print(
+                f"  --> Mejor agrupamiento: {seed_node} (métrica = {round(best_metric, 2)})"
+            )
 
     return best_clusters
 
@@ -165,6 +175,8 @@ def run_phase1():
         load = sum(CUSTOMERS[i]["demand"] for i in cl)
         print(f"  Clúster {idx:>2}: {cl}, Capacidad = {load}/{VEHICLE_CAPACITY}")
 
-    print(f"\nMétrica de agrupamiento: {round(_clustering_metric(clusters, CUSTOMERS), 2)}\n")
+    print(
+        f"\nMétrica de agrupamiento: {round(_clustering_metric(clusters, CUSTOMERS), 2)}\n"
+    )
 
     return clusters
