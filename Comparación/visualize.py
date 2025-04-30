@@ -50,7 +50,7 @@ def run_data(SIMUL, param):
     visualize_(todos_los_datos, param)
 
 
-NUM_SIMUL = 100
+NUM_SIMUL = 500
 run_data(NUM_SIMUL, "distances")
 run_data(NUM_SIMUL, "times")
 run_data(NUM_SIMUL, "utilization")
