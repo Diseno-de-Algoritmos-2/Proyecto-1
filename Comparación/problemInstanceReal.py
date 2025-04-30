@@ -2,7 +2,7 @@ import polars as pl
 import random
 
 # DEPOSITO
-planta = pl.read_excel("data/clientes_con_demanda.xlsx", sheet_name="Planta")
+planta = pl.read_excel("Data/clientes_con_demanda.xlsx", sheet_name="Planta")
 vehicle_capacity = planta["CAPACIDAD CAMIÓN"].to_list()[0]
 depot = {
     "coord": (planta["COORDENADA X"].to_list()[0], planta["COORDENADA Y"].to_list()[0]),
@@ -10,7 +10,7 @@ depot = {
 }
 
 # CLIENTES
-clientes = pl.read_excel("data/clientes_con_demanda.xlsx", sheet_name="Clientes")
+clientes = pl.read_excel("Data/clientes_con_demanda.xlsx", sheet_name="Clientes")
 len_clientes = len(clientes)
 customers = [depot]
 
