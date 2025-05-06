@@ -63,7 +63,7 @@ def visualize_distances(data_file):
     plt.scatter(
         num_clients, worst_case_distances, label="Worst Case", color="red", alpha=0.6
     )
-    plt.title("Distances vs Num Clients")
+    plt.title("Total Route Distance (Logarithmic Scale) vs Num Clients")
     plt.xlabel("Num Clients")
     plt.ylabel("Distance")
     # make the y-axis logarithmic
