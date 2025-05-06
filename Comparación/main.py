@@ -12,8 +12,9 @@ from problemInstanceReal import (
 
 from mainPaper import run_paper
 from mainOwn import run_own
+from mainWorstCase import run_worst_case_distance
 
-SIM = 500
+SIM = int(sys.argv[1]) if len(sys.argv) > 1 else 500
 IF_PRINT = False
 
 
@@ -31,6 +32,7 @@ print("-------------------------------------------------------\n")
 
 CUSTOMERS = get_clientes(size)
 
+
 # Correr el algoritmo del Paper
 routes_paper, utilization_paper, best_dist_paper, exceution_time_paper = run_paper(
     CUSTOMERS, VEHICLE_CAPACITY, IF_PRINT
@@ -41,9 +43,14 @@ routes_own, utilization_own, best_dist_own, exceution_time_own = run_own(
     CUSTOMERS, VEHICLE_CAPACITY, IF_PRINT
 )
 
+# Calcular la distancia en el peor caso (cuando cada cliente requiere una ruta de ida y vuelta)
+worst_case_distance, exceution_time_worst = run_worst_case_distance(CUSTOMERS)
+
+
 # Guardar resultados
 print(f"Distance Paper: {best_dist_paper} in {exceution_time_paper} seg\n")
-print(f"Distance Own: {best_dist_own} in {exceution_time_own} seg")
+print(f"Distance Own: {best_dist_own} in {exceution_time_own} seg\n")
+print(f"Distance Worst Case: {worst_case_distance} in {exceution_time_worst} seg")
 
 # 1. Distancias
 DISTANCES_ = {
@@ -51,6 +58,7 @@ DISTANCES_ = {
     "paper": best_dist_paper,
     "own": best_dist_own,
     "gap": (best_dist_own / best_dist_paper - 1) * 100,
+    "worst_case_distance": worst_case_distance,
 }
 
 # 2. Tiempos
